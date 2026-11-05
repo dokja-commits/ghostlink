@@ -3,6 +3,12 @@ export async function computeSHA256(data: BufferSource): Promise<Uint8Array> {
   return new Uint8Array(hashBuffer);
 }
 
+export async function calculateSha256(file: Blob | File | ArrayBuffer): Promise<string> {
+  const buffer = file instanceof ArrayBuffer ? file : await file.arrayBuffer();
+  const hash = await computeSHA256(buffer);
+  return bytesToHex(hash);
+}
+
 export async function computeSHA256FromChunks(chunks: Uint8Array[]): Promise<Uint8Array> {
   const totalLength = chunks.reduce((acc, c) => acc + c.length, 0);
   const combined = new Uint8Array(totalLength);

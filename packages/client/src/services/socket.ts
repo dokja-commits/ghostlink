@@ -9,8 +9,10 @@ const isDev = typeof window !== 'undefined' &&
 
 function getServerUrl(): string {
   if (import.meta.env.VITE_SERVER_URL) return import.meta.env.VITE_SERVER_URL;
-  if (isDev) return 'http://localhost:3001';
-  return 'https://p2p-web-share-4gk6.onrender.com';
+  if (typeof window !== 'undefined' && window.location.hostname) {
+    return `${window.location.protocol}//${window.location.hostname}:3001`;
+  }
+  return 'http://localhost:3001';
 }
 
 export function getSocket(): Socket | null {

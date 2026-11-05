@@ -41,6 +41,12 @@ export type {
   TransferProgress,
   PeerInfo,
   RoomInfo,
+  DeviceType,
+  PlatformType,
+  NearbyDevice,
+  DiscoveryBeacon,
+  LanTransferPrepareRequest,
+  LanTransferPrepareResponse,
 } from './types.js';
 export {
   ROOM_ID_LENGTH,

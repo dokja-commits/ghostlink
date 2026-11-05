@@ -3,14 +3,15 @@ import { connectSocket, disconnectSocket } from '../services/socket.js';
 import { useConnectionStore } from '../stores/connectionStore.js';
 import { useTransferStore } from '../stores/transferStore.js';
 import { useRoomStore } from '../stores/roomStore.js';
+import { useNearbyStore } from '../stores/nearbyStore.js';
+import type { NearbyDevice } from '@p2p-share/shared';
 
-// This hook handles only socket events that are NOT managed by Room.tsx.
-// Room.tsx owns: room-joined, peer-joined, room-error, room-expired, room-created
-// Adding those here too causes duplicate handlers and double-fires on every signaling event.
+// This hook handles global socket events including LAN discovery and remote signaling.
 export function useSocket() {
   const { setConnectionState } = useConnectionStore();
   const { setFileMetadata, setTransferPhase, setTransferError } = useTransferStore();
   const { setRoomId, setRoomPhase } = useRoomStore();
+  const { setPeers, setSelfDevice, setIncomingTransfer } = useNearbyStore();
 
   const cleanup = useCallback(() => {
     disconnectSocket();
@@ -18,6 +19,19 @@ export function useSocket() {
 
   useEffect(() => {
     const socket = connectSocket();
+
+    // Nearby Discovery & LAN Transfer events
+    socket.on('nearby:peers', (peers: NearbyDevice[]) => {
+      setPeers(peers);
+    });
+
+    socket.on('nearby:self', (device: NearbyDevice) => {
+      setSelfDevice(device);
+    });
+
+    socket.on('lan-transfer:incoming', (session: any) => {
+      setIncomingTransfer(session);
+    });
 
     socket.on('room-created', (data: { roomId: string; expiresAt: number }) => {
       setRoomId(data.roomId);
@@ -40,6 +54,9 @@ export function useSocket() {
       setTransferError(data.error);
       setTransferPhase('error');
     });
+
+    // Also trigger initial fetch of nearby peers
+    useNearbyStore.getState().fetchNearby();
 
     return cleanup;
   }, []);
